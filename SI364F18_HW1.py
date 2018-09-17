@@ -6,12 +6,13 @@
 
 ## List below here, in a comment/comments, the people you worked with on this assignment AND any resources you used to find code (50 point deduction for not doing so). If none, write "None".
 
+#None
 
 
-## [PROBLEM 1] - 150 points
-## Below is code for one of the simplest possible Flask applications. Edit the code so that once you run this application locally and go to the URL 'http://localhost:5000/class', you see a page that says "Welcome to SI 364!"
+from flask import Flask, render_template, request
+import requests
+import json
 
-from flask import Flask
 app = Flask(__name__)
 app.debug = True
 
@@ -19,10 +20,12 @@ app.debug = True
 def hello_to_you():
     return 'Hello!'
 
+## [PROBLEM 1] - 150 points
+## Below is code for one of the simplest possible Flask applications. Edit the code so that once you run this application locally and go to the URL 'http://localhost:5000/class', you see a page that says "Welcome to SI 364!"
 
-if __name__ == '__main__':
-    app.run()
-
+@app.route('/class')
+def welcome():
+    return 'Welcome to SI 364!'
 
 ## [PROBLEM 2] - 250 points
 ## Edit the code chunk above again so that if you go to the URL 'http://localhost:5000/movie/<name-of-movie-here-one-word>' you see a big dictionary of data on the page. For example, if you go to the URL 'http://localhost:5000/movie/ratatouille', you should see something like the data shown in the included file sample_ratatouille_data.txt, which contains data about the animated movie Ratatouille. However, if you go to the url http://localhost:5000/movie/titanic, you should get different data, and if you go to the url 'http://localhost:5000/movie/dsagdsgskfsl' for example, you should see data on the page that looks like this:
@@ -39,11 +42,42 @@ if __name__ == '__main__':
 
 ## Run the app locally (repeatedly) and try these URLs out!
 
+@app.route('/movie/<title>')
+def movie_search(title):
+    base_url = 'https://itunes.apple.com/search'
+    params_d = {}
+    params_d['term'] = title
+    req = requests.get(base_url, params = params_d)
+    s = json.loads(req.text)
+    return str(s)
+
 ## [PROBLEM 3] - 250 points
 
 ## Edit the above Flask application code so that if you run the application locally and got to the URL http://localhost:5000/question, you see a form that asks you to enter your favorite number.
 ## Once you enter a number and submit it to the form, you should then see a web page that says "Double your favorite number is <number>". For example, if you enter 2 into the form, you should then see a page that says "Double your favorite number is 4". Careful about types in your Python code!
 ## You can assume a user will always enter a number only.
+
+@app.route('/question')
+def fav_num():
+    html_form = '''
+    <html>
+    <body>
+    <form action = "/result" method = "GET">
+        Favorite Number: <input type = "number" name = "num"><br>
+        <input type = "submit" value = "Submit">
+    </form>
+    </body>
+    </html>
+    '''
+    return html_form
+
+@app.route('/result', methods = ['GET', 'POST'])
+def resultView():
+    if request.method == "GET":
+        n = request.args.get("num")
+    double = int(n)*2
+    return 'Double your favorite number is {}'.format(str(double))
+
 
 
 ## [PROBLEM 4] - 350 points
@@ -65,3 +99,51 @@ if __name__ == '__main__':
 # You can assume that a user will give you the type of input/response you expect in your form; you do not need to handle errors or user confusion. (e.g. if your form asks for a name, you can assume a user will type a reasonable name; if your form asks for a number, you can assume a user will type a reasonable number; if your form asks the user to select a checkbox, you can assume they will do that.)
 
 # Points will be assigned for each specification in the problem.
+
+@app.route('/problem4form', methods=["GET","POST"])
+def song_search():
+    html_form = '''
+    <html>
+    <body>
+    <form action = 'http://localhost:5000/problem4form' method = "POST">
+        <fieldset>
+            <legend>Pick a type of media you would like to search for:</legend>
+            <input type = "checkbox" name = "media" value = "movie"> Movie<br>
+            <input type = "checkbox" name = "media" value = "podcast"> Podcast<br>
+            <input type = "checkbox" name = "media" value = "music"> Music<br>
+            <input type = "checkbox" name = "media" value = "musicVideo"> Music Video<br>
+            <input type = "checkbox" name = "media" value = "tvShow"> TV Show<br>
+            <input type = "checkbox" name = "media" value = "software"> App<br>
+            <input type = "checkbox" name = "media" value = "ebook"> E-Book<br>
+        </fieldset><br>
+        What would you like to search for within this catergory? <input type = "text" name = "term"><br><br>
+        <input type = "submit" value = "Submit">
+    </form>
+    </body>
+    </html>
+    '''
+
+    if request.method == "POST":
+        media = request.values.get("media")
+        term = request.values.get("term")
+        base_url = 'https://itunes.apple.com/search'
+        params_d = {}
+        params_d['media'] = media
+        params_d['term'] = term
+        req = requests.get(base_url, params = params_d)
+        s = json.loads(req.text)
+        res = "<h1>Here are the top results:\n\n</h1>"
+        for r in s['results']:
+            title = r['trackName']
+            artist = r['artistName']
+            p = "{} by {}<br>".format(title, artist)
+            res += p
+        return html_form + res
+
+    else:
+        return html_form
+
+
+
+if __name__ == '__main__':
+    app.run()
