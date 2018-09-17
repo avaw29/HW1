@@ -47,6 +47,7 @@ def movie_search(title):
     base_url = 'https://itunes.apple.com/search'
     params_d = {}
     params_d['term'] = title
+    params_d['entity'] = "movie"
     req = requests.get(base_url, params = params_d)
     s = json.loads(req.text)
     return str(s)
