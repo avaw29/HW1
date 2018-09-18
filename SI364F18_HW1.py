@@ -108,7 +108,7 @@ def song_search():
     <body>
     <form action = 'http://localhost:5000/problem4form' method = "POST">
         <fieldset>
-            <legend>Pick a type of media you would like to search for:</legend>
+            <legend>Pick one type of media you would like to search for:</legend>
             <input type = "checkbox" name = "media" value = "movie"> Movie<br>
             <input type = "checkbox" name = "media" value = "podcast"> Podcast<br>
             <input type = "checkbox" name = "media" value = "music"> Music<br>
